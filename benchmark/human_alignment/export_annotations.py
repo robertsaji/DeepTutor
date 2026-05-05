@@ -93,12 +93,37 @@ def _format_gaps(
     return formatted
 
 
-def _dialog_messages(transcript: list[dict[str, Any]]) -> list[dict[str, str]]:
+def _normalize_for_overlap(text: Any) -> str:
+    return "".join(ch.lower() for ch in str(text or "") if ch.isalnum())
+
+
+def _looks_like_practice_question_turn(content: str, practice_questions: list[Any]) -> bool:
+    if not practice_questions:
+        return False
+    normalized_content = _normalize_for_overlap(content)
+    if not normalized_content:
+        return False
+    matched = 0
+    for question in practice_questions:
+        normalized_question = _normalize_for_overlap(question)
+        if not normalized_question:
+            continue
+        snippet = normalized_question[: min(len(normalized_question), 240)]
+        if snippet and snippet in normalized_content:
+            matched += 1
+    return matched >= max(1, min(2, len(practice_questions)))
+
+
+def _dialog_messages(transcript: list[dict[str, Any]], practice_questions: list[Any] | None = None) -> list[dict[str, str]]:
     messages = []
     for msg in transcript:
         role = msg.get("role")
         if role in {"student", "tutor"}:
             messages.append({"role": role, "content": str(msg.get("content", ""))})
+    if messages and messages[-1]["role"] == "tutor" and _looks_like_practice_question_turn(
+        messages[-1]["content"], practice_questions or []
+    ):
+        messages = messages[:-1]
     return messages
 
 
@@ -136,6 +161,7 @@ def _session_records_for_backend(
             key = _session_match_key(kb_name, str(profile_id), str(entry_id), idx)
             transcript = session.get("transcript", []) or []
             practice_questions = session.get("practice_questions", []) or []
+            dialog = _dialog_messages(transcript, practice_questions)
             records[key] = {
                 "kb_name": kb_name,
                 "backend": backend,
@@ -152,10 +178,10 @@ def _session_records_for_backend(
                     "target_gaps": task.get("target_gaps", []),
                 },
                 "gaps": _format_gaps(entry.get("gaps", []) or [], entry.get("source_content"), source_chars),
-                "dialog": _dialog_messages(transcript),
+                "dialog": dialog,
                 "practice_questions": practice_questions,
                 "turn_count": {
-                    "dialog_messages": len(_dialog_messages(transcript)),
+                    "dialog_messages": len(dialog),
                     "practice_questions": len(practice_questions),
                 },
             }

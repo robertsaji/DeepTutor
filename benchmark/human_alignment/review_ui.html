@@ -685,12 +685,35 @@
           </article>`;
         }).join("");
       }
+      function normalizeForOverlap(text) {
+        return String(text || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+      }
+      function looksLikePracticeQuestionTurn(message, questions) {
+        if (!message || message.role !== "tutor" || !questions || !questions.length) return false;
+        const content = normalizeForOverlap(message.content || "");
+        if (!content) return false;
+        let matched = 0;
+        for (const question of questions) {
+          const normalized = normalizeForOverlap(question);
+          const snippet = normalized.slice(0, Math.min(normalized.length, 240));
+          if (snippet && content.includes(snippet)) matched += 1;
+        }
+        return matched >= Math.max(1, Math.min(2, questions.length));
+      }
+      function dialogWithoutPracticeQuestionTurn(system) {
+        const dialog = [...(system.dialog || [])];
+        if (dialog.length && looksLikePracticeQuestionTurn(dialog[dialog.length - 1], system.practice_questions || [])) {
+          dialog.pop();
+        }
+        return dialog;
+      }
       function renderSystem(label, system) {
+        const dialog = dialogWithoutPracticeQuestionTurn(system);
         return `<section class="panel system-${label.toLowerCase()}">
-          <div class="head"><h2>System ${label}</h2><span class="status">${(system.dialog || []).length} dialog messages</span></div>
+          <div class="head"><h2>System ${label}</h2><span class="status">${dialog.length} dialog messages</span></div>
           <div class="body stack">
             <h3>Dialog</h3>
-            ${renderDialog(system.dialog || [])}
+            ${renderDialog(dialog)}
             <h3>Practice Questions</h3>
             ${renderQuestions(system.practice_questions || [])}
           </div>

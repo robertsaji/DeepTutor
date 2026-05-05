@@ -148,6 +148,53 @@ def test_export_pairwise_annotations_matches_sessions_and_hides_backend(tmp_path
     assert Path(manifest["review_ui_path"]).exists()
 
 
+def test_export_pairwise_annotations_removes_duplicate_practice_turn(tmp_path: Path) -> None:
+    output_root = tmp_path / "bench"
+    practice_questions = [
+        "Question 1: What does the chain rule compute?",
+        "Question 2: Differentiate sin(x^2).",
+    ]
+    for backend, label in [("deep_tutor", "DT"), ("mock", "MOCK")]:
+        _write_json(
+            output_root / "transcripts" / "Calculus" / backend / "p1.json",
+            {
+                "profile_id": "p1",
+                "sessions": [
+                    {
+                        "entry_id": "e1",
+                        "entry": _fake_entry("e1"),
+                        "transcript": [
+                            {"role": "student", "content": "I do not get this."},
+                            {"role": "tutor", "content": f"{label}: Let's use a nested function."},
+                            {
+                                "role": "tutor",
+                                "content": "\n\n".join(practice_questions),
+                            },
+                        ],
+                        "practice_questions": practice_questions,
+                    },
+                ],
+            },
+        )
+
+    manifest = export_annotation_package(
+        output_root=output_root,
+        kb_names=["Calculus"],
+        output_dir=tmp_path / "human",
+        target_backend="deep_tutor",
+        baseline_backend="mock",
+        seed=7,
+    )
+
+    row = json.loads(Path(manifest["package_path"]).read_text(encoding="utf-8").splitlines()[0])
+    assert row["system_a"]["turn_count"]["dialog_messages"] == 2
+    assert row["system_b"]["turn_count"]["dialog_messages"] == 2
+    assert len(row["system_a"]["dialog"]) == 2
+    assert len(row["system_b"]["dialog"]) == 2
+    assert row["system_a"]["practice_questions"] == practice_questions
+    assert row["system_b"]["practice_questions"] == practice_questions
+
+
 def test_summarize_pairwise_annotations_majority_and_llm_threshold(tmp_path: Path) -> None:
     output_root = tmp_path / "bench"
     _write_eval(output_root, "deep_tutor", e1_score=4.8, e2_score=4.1)
@@ -224,4 +271,3 @@ def test_summarize_pairwise_annotations_majority_and_llm_threshold(tmp_path: Pat
     assert summary["pairs"][0]["metrics"]["SF"]["human_backend_preference"] == "target"
     assert summary["pairs"][1]["metrics"]["SF"]["llm_backend_preference"] == "tie"
     assert (tmp_path / "human" / "summary.md").exists()
-
