@@ -28,6 +28,24 @@ from benchmark.human_alignment.summarize_annotations import summarize_annotation
 
 DEFAULT_JUDGE_MODEL = "anthropic/claude-sonnet-4.6"
 DEFAULT_JUDGE_CONCURRENCY = 8
+LIVE_JUDGE_METRIC_RUBRIC = {
+    "SF": (
+        "Source faithfulness. Prefer the system that is more faithful to the provided "
+        "source excerpts, avoids unsupported claims or contradictions, and clearly marks "
+        "where source-backed information comes from. Explicit page/source references, "
+        "attribution phrases, or otherwise clear separation between source-grounded "
+        "content and the tutor's own explanation are important evidence for this metric."
+    ),
+    "PER": "Personalization. Prefer the system that adapts better to the student's profile, knowledge state, and current confusion.",
+    "APP": "Applicability. Prefer the system that better helps the student make progress on the task and success criteria.",
+    "VID": "Vividness. Prefer the system with more concrete, vivid, and example-supported explanations.",
+    "LD": "Logical depth. Prefer the system with deeper, more coherent conceptual reasoning.",
+    "FIT": "Practice question fitness. Prefer the practice set that better fits the student and target gaps.",
+    "GND": "Practice question groundedness. Prefer the practice set that is more consistent with the source excerpts.",
+    "DIV": "Practice question diversity. Prefer the practice set that covers more varied angles rather than repeating one pattern.",
+    "ANS": "Practice question answer quality. Prefer the practice set with better options, answers, and non-trivial distractors.",
+    "CC": "Practice question cross-concept. Prefer the practice set that better connects related concepts where appropriate.",
+}
 SYSTEM_PROMPT = """You are an expert blind evaluator for TutorBench.
 
 You compare System A and System B for the same student profile, task, source excerpts,
@@ -132,7 +150,7 @@ def _judge_prompt(item: dict[str, Any]) -> str:
     system_a = item.get("system_a", {}) or {}
     system_b = item.get("system_b", {}) or {}
     metrics = "\n".join(
-        f"- {code}: {METRIC_BY_CODE[code]['label']}"
+        f"- {code}: {LIVE_JUDGE_METRIC_RUBRIC[code]}"
         for code in METRIC_CODES
     )
     return f"""Compare System A and System B for this pair.
