@@ -70,6 +70,8 @@ Copy `.env.example` to `.env` and configure the following:
 
 For Chinese users, refer to `.env.example_CN` for region-specific configurations.
 
+> **Personal note:** I'm running this locally with `LLM_PROVIDER=deepseek` and `EMBEDDING_MODEL=text-embedding-3-small` — works well for my use case and keeps costs low.
+
 ## 🏗️ Architecture
 
 ```
