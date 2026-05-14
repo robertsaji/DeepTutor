@@ -75,6 +75,14 @@ For Chinese users, refer to `.env.example_CN` for region-specific configurations
 > **Tip:** If DeepSeek's API is rate-limiting you during peak hours, switching `LLM_PROVIDER=openai` with `gpt-4o-mini` is a good fallback — still cheap and noticeably more reliable.
 >
 > **Note:** I've also found it helpful to set `MAX_UPLOAD_SIZE_MB=50` in `.env` if you're working with larger academic PDFs — the default felt a bit restrictive.
+>
+> **Note:** If you're on macOS and hit a `sqlite3` version error on startup, run `pip install pysqlite3-binary` and add the following to the top of `app.py` before any other imports:
+> ```python
+> __import__('pysqlite3')
+> import sys
+> sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+> ```
+> This patches the system sqlite3 with a newer version that ChromaDB requires.
 
 ## 🏗️ Architecture
 
@@ -96,7 +104,4 @@ DeepTutor/
 Contributions are welcome! Please open an issue or submit a pull request.
 
 1. Fork the repository
-2. Create your feature branch (`git checkout -b feat/amazing-feature`)
-3. Commit your changes (`git commit -m 'feat: add amazing feature'`)
-4. Push to the branch (`git push origin feat/amazing-feature`)
-5. Open a Pull
+2. Create your feature branch (`git checkout -b feat/
