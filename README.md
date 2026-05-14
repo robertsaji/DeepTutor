@@ -71,6 +71,8 @@ Copy `.env.example` to `.env` and configure the following:
 For Chinese users, refer to `.env.example_CN` for region-specific configurations.
 
 > **Personal note:** I'm running this locally with `LLM_PROVIDER=deepseek` and `EMBEDDING_MODEL=text-embedding-3-small` — works well for my use case and keeps costs low. I also set `VECTOR_DB_PATH=./data/vectordb` so everything stays self-contained in the project directory.
+>
+> **Tip:** If DeepSeek's API is rate-limiting you during peak hours, switching `LLM_PROVIDER=openai` with `gpt-4o-mini` is a good fallback — still cheap and noticeably more reliable.
 
 ## 🏗️ Architecture
 
@@ -104,5 +106,3 @@ This project is licensed under the MIT License — see the [LICENSE](LICENSE) fi
 ## 🙏 Acknowledgements
 
 - Original project: [HKUDS/DeepTutor](https://github.com/HKUDS/DeepTutor)
-- Built with [LangChain](https://github.com/langchain-ai/langchain)
-- UI p
