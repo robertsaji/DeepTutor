@@ -83,6 +83,8 @@ For Chinese users, refer to `.env.example_CN` for region-specific configurations
 > sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
 > ```
 > This patches the system sqlite3 with a newer version that ChromaDB requires.
+>
+> **Note:** On first run, the vector DB index can take a minute or two to build for larger PDFs — this is normal. Subsequent loads for the same document are near-instant since the index is cached on disk.
 
 ## 🏗️ Architecture
 
@@ -92,16 +94,5 @@ DeepTutor/
 ├── backend/
 │   ├── api/            # REST API routes
 │   ├── core/           # Core RAG and LLM logic
-│   ├── models/         # Data models
-│   └── utils/          # Utility functions
-├── frontend/           # Web UI
-├── data/               # Document storage
-└── docker-compose.yml  # Docker configuration
+│  
 ```
-
-## 🤝 Contributing
-
-Contributions are welcome! Please open an issue or submit a pull request.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feat/
